@@ -15,12 +15,14 @@ class OmegaIo extends Phaser.Scene {
     create() {
         this.add.tileSprite(0, 0, 1200, 800, "racetrack").setOrigin(0, 0);
 
-        this.car = this.physics.add.sprite(400, 300, 'car').setCollideWorldBounds(true).setScale(0.5);
+        this.car = this.physics.add.sprite(400, 300, 'car').setCollideWorldBounds(true).setScale(0.3);
 
         this.cursors = this.input.keyboard.createCursorKeys();
+
+        this.setupMultiplayer();
     }
 
-    update() {
+    update(time, delta) {
         if (this.cursors.left.isDown) {
             this.car.setAngularVelocity(-200);
         } else if (this.cursors.right.isDown){
@@ -36,7 +38,28 @@ class OmegaIo extends Phaser.Scene {
         } else {
             this.car.body.velocity.scale(0.98);
         }
+
+        socket.emit("update", {
+            x: this.car.x,
+            y: this.car.y,
+            angle: this.car.angle
+        });
+
     }
+
+    setupMultiplayer() {
+        socket.emit("ready");
+
+        socket.on("init", (data) => {
+            this.playerId = data.id;
+            this.players = data.players;
+            const playerData = this.players[this.playerId];
+            this.car.setPosition(playerData.x, playerData.y);
+            this.car.setAngle(playerData.angle);
+            this.car.setTint(playerData.color);
+        });
+    }
+
 
 }
 
