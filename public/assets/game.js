@@ -18,8 +18,20 @@ class OmegaIo extends Phaser.Scene {
         this.car = this.physics.add.sprite(400, 300, 'car').setCollideWorldBounds(true).setScale(0.3);
 
         this.cursors = this.input.keyboard.createCursorKeys();
+        this.remoteCars = {}
 
         this.setupMultiplayer();
+    }
+
+    addRemoteCar(player){
+        if (player.id === this.playerId || this.remoteCars[player.id] ) return;
+
+        const car = this.add.sprite( player.x, player.y, "car").setScale(0.3);
+        car.setAngle(player.angle)
+        car.setTint(player.color)
+
+        this.remoteCars[player.id] = car
+
     }
 
     update(time, delta) {
@@ -57,7 +69,26 @@ class OmegaIo extends Phaser.Scene {
             this.car.setPosition(playerData.x, playerData.y);
             this.car.setAngle(playerData.angle);
             this.car.setTint(playerData.color);
+
+
+            for (const player of Object.values(this.players)) {
+                this.addRemoteCar(player);
+            }
         });
+
+            socket.on("playerMoved", (data) => {
+                const car = this.remoteCars[data.id];
+                if (car) {
+                    car.setPosition(data.x, data.y);
+                    car.setAngle(data.angle);
+                }
+
+        })
+        
+        socket.on("playerJoined", (player) => {
+            this.addRemoteCar(player);
+        })
+
     }
 
 

@@ -27,7 +27,12 @@ players[id] = {
 
 socket.on ("ready", () => {
   socket.emit("init", {id: id, players: players})
+  socket.broadcast.emit("playerJoined", players[id])
+
 });
+
+
+
 
 socket.on("update", (data) => {
   if (players[socket.id]) {
